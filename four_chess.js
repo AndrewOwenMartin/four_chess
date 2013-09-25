@@ -3,50 +3,323 @@ var Type = new Class({
     initialize: function(options){
         this.letter = options["letter"]
         this.moves = options["moves"]
+        this.id = options["id"]
+        this.img_pos = options["img_pos"]
     }
 })
-function pawn_moves(state,pos){
-    console.log(pos)
-    return "pawn"
+function pawn_moves(state,col,row){
+    valid_moves = []
+    var piece_owner = state[col][row].owner.id
+    for(var c = -1; c < 2; c++){
+        for(var r = -1; r < 2; r++){
+            if(c == 0 && r == 0){
+                continue
+            }
+            var new_col = c + col
+            var new_row = r + row
+            if(new_col < 0 || new_row < 0 || new_col > 7 || new_row > 7){
+                continue
+            }
+            var square = state[new_col][new_row]
+            if(c == 0 || r == 0){
+                //orthogonal
+                if(square.type.id == 0){
+                    valid_moves.push([new_col,new_row])
+                }
+            }else{
+                //diagonal
+                if(square.type.id != 0 && square.owner.id != piece_owner){
+                    valid_moves.push([new_col,new_row])
+                }
+            }
+        }
+    }
+    return valid_moves
 }
-function rook_moves(state,pos){
-    console.log(pos)
-    return "blah"
+function king_moves(state,col,row){
+    var moves = []
+    var piece_owner = state[col][row].owner.id
+    for(var c = -1; c < 2; c++){
+        for(var r = -1; r < 2; r++){
+            var new_col = col + c
+            var new_row = row + r
+            if(new_col < 0 || new_row < 0 || new_col > 7 || new_row > 7){
+                continue
+            }
+            var square = state[new_col][new_row] 
+            if((square.type.id == 0 || square.owner.id != piece_owner) && !threatened(piece_owner,state,new_col,new_row)){
+                moves.push([new_col,new_row])
+            }
+        }
+    }
+    return moves
 }
-function knight_moves(state,pos){
-    console.log(pos)
-    return "blah"
+function threatened(owner,state,col,row){
+    //check for enemy knights
+    var knight_moves = [
+        [col + 2, row + 1],
+        [col + 2, row - 1],
+        [col - 2, row + 1],
+        [col - 2, row - 1],
+        [col - 1, row + 2],
+        [col + 1, row + 2],
+        [col - 1, row - 2],
+        [col + 1, row - 2]
+    ]
+    var not_threatened = knight_moves.every(function(pos){
+        if(pos[0] < 0  || pos[1] < 0 || pos[0] > 7 || pos[1] > 7){
+            return true
+        }
+        var square = state[pos[0]][pos[1]]
+        if(square.type.id == 3 && square.owner.id != owner ){
+            return false
+        }
+        return true
+    })
+    if(!not_threatened){
+        //console.log("position [" + col + ", " + row + "] threatened by knight")
+        return true
+    }
+    //check for enemy pawns
+    var pawn_attacks = [
+        [col + 1, row + 1],
+        [col + 1, row - 1],
+        [col - 1, row + 1],
+        [col - 1, row - 1]
+    ]
+    not_threatened = pawn_attacks.every(function(pos){
+        //console.log("pawn")
+        if(pos[0] < 0  || pos[1] < 0 || pos[0] > 7 || pos[1] > 7){
+            return true
+        }
+        var square = state[pos[0]][pos[1]]
+        //console.log("looking for pawn on square [" + col + ", " + row + "]")
+        if(square.type.id == 1 && square.owner.id != owner){
+            //console.log("found!")
+            return false
+        }else{
+            //console.log("NOT found!")
+        }
+        return true
+    })
+    if(!not_threatened){
+        //console.log("position [" + col + ", " + row + "] threatened by pawn")
+        return true
+    }
+    //check for enemy kings
+    var king_attacks = [
+        [col + 1, row + 1],
+        [col + 1, row - 1],
+        [col - 1, row + 1],
+        [col - 1, row - 1],
+        [col, row + 1],
+        [col, row - 1],
+        [col - 1, row],
+        [col + 1, row]
+    ]
+    not_threatened = king_attacks.every(function(pos){
+        if(pos[0] < 0  || pos[1] < 0 || pos[0] > 7 || pos[1] > 7){
+            return true
+        }
+        var square = state[pos[0]][pos[1]]
+        if(square.type.id == 5 && square.owner.id != owner){
+            return false
+        }
+        return true
+    })
+    if(!not_threatened){
+        //console.log("position [" + col + ", " + row + "] threatened by king")
+        return true
+    }
+    //check for enemy rooks
+    var rook_dirs = [
+        [ 0, 1],
+        [ 0,-1],
+        [-1, 0],
+        [ 1, 0]
+    ]
+    not_threatened = rook_dirs.every(function(dir){
+        var pos = [col,row]
+        var blank_space = true
+        while(blank_space){
+            blank_space = false
+            pos[0] += dir[0]
+            pos[1] += dir[1]
+            if(pos[0] < 0  || pos[1] < 0 || pos[0] > 7 || pos[1] > 7){
+                return true
+            }
+            var square = state[pos[0]][pos[1]]
+            if(square.type.id == 2 && square.owner.id != owner){
+                return false
+            }
+            if(square.type.id == 0){
+                blank_space = true
+            }else{
+                return true
+            }
+        }
+        return true
+    })
+    if(!not_threatened){
+        //console.log("position [" + col + ", " + row + "] threatened by rook")
+        return true
+    }
+
+    //check for enemy bishops
+    var bishop_dirs = [
+        [ 1, 1],
+        [ 1,-1],
+        [-1, 1],
+        [-1,-1]
+    ]
+    not_threatened = bishop_dirs.every(function(dir){
+        var pos = [col,row]
+        var blank_space = true
+        while(blank_space){
+            blank_space = false
+            pos[0] += dir[0]
+            pos[1] += dir[1]
+            if(pos[0] < 0  || pos[1] < 0 || pos[0] > 7 || pos[1] > 7){
+                return true
+            }
+            var square = state[pos[0]][pos[1]]
+            if(square.type.id == 4 && square.owner.id != owner){
+                return false
+            }
+            if(square.type.id == 0){
+                blank_space = true
+            }else{
+                return true
+            }
+        }
+        return true
+    })
+    if(!not_threatened){
+        //console.log("position [" + col + ", " + row + "] threatened by bishop")
+        return true
+    }
+    return false
 }
-function bishop_moves(state,pos){
-    console.log(pos)
-    return "blah"
+function long_moves(state,col,row){
+    var moves = []
+    var piece_owner = state[col][row].owner.id
+    var orthogonal = state[col][row].type.id == 2
+    for(var c = -1; c < 2; c++){
+        for(var r = -1; r < 2; r++){
+            if(orthogonal){
+                if(
+                    (c == 0 && r == 0)
+                    || (c != 0 && r != 0)
+                ){
+                    //filter diagonal, or "rest"
+                    continue
+                }
+            }else{
+                if(c == 0 || r == 0){
+                    //filter orthogonal, or "rest"
+                    continue
+                }
+            }
+            var new_col = col
+            var new_row = row
+            var blank_squares = true
+            while(blank_squares){
+                new_col += c
+                new_row += r
+                blank_squares = false
+                if(new_col < 0 || new_col > 7 || new_row < 0 || new_row > 7){
+                    //filter board edges
+                    continue
+                }
+                var square = state[new_col][new_row] 
+                if(square.type.id == 0 || square.owner.id != piece_owner){
+                    if(square.type.id == 0){
+                        blank_squares = true
+                    }
+                    moves.push([new_col,new_row])
+                }
+            }
+        }
+    }
+    return moves
 }
-function king_moves(state,pos){
-    console.log(pos)
-    return "blah"
+function knight_moves(state,col,row){
+    var potential_squares = []
+    if(col > 1){
+        if(row > 0){
+            potential_squares.push([col-2,row-1])
+        }
+        if(row < 7){
+            potential_squares.push([col-2,row+1])
+        }
+    }
+    if(col < 6){
+        if(row > 0){
+            potential_squares.push([col+2,row-1])
+        }
+        if(row < 7){
+            potential_squares.push([col+2,row+1])
+        }
+    }
+    if(row > 1){
+        if(col > 0){
+            potential_squares.push([col-1,row-2])
+        }
+        if(col < 7){
+            potential_squares.push([col+1,row-2])
+        }
+    }
+    if(row < 6){
+        if(col > 0){
+            potential_squares.push([col-1,row+2])
+        }
+        if(col < 7){
+            potential_squares.push([col+1,row+2])
+        }
+    }
+    var actual_squares = []
+    var owner_id = state[col][row].owner.id
+    Array.each(potential_squares,function(sq_pos){
+        var square = state[sq_pos[0]][sq_pos[1]]
+        if(square.type.id == 0 || square.owner.id != owner_id){
+            actual_squares.push(sq_pos)
+        }
+    })
+    return actual_squares
 }
 var types = {
     "empty": new Type({
-        "letter":" "
+        "letter":" ",
+        "id":0,
     }),
     "pawn": new Type({
         "letter":"p",
+        "id":1,
+        "img_pos":0,
         "moves":pawn_moves
     }),
     "rook": new Type({
         "letter":"r",
-        "moves":rook_moves
+        "id":2,
+        "img_pos":-96,
+        "moves":long_moves
     }),
     "knight": new Type({
         "letter":"n",
+        "id":3,
+        "img_pos":-32,
         "moves":knight_moves
     }),
     "bishop": new Type({
         "letter":"b",
-        "moves":bishop_moves
+        "id":4,
+        "img_pos":-64,
+        "moves":long_moves
     }),
     "king": new Type({
         "letter":"k",
+        "id":5,
+        "img_pos":-160,
         "moves":king_moves
     })
 }
@@ -65,33 +338,34 @@ var owners = {
     "marn":{
         "id":1,
         "name":"Marn",
+        "code":"marn",
         "color":"#f00"
     },
     "bruno":{
         "id":2,
         "name":"Bruno",
+        "code":"bruno",
         "color":"#0f0"
     },
     "chad":{
         "id":3,
         "name":"Chad",
+        "code":"chad",
         "color":"#00f"
     },
     "malcolm":{
         "id":4,
         "name":"Malcolm",
+        "code":"malcolm",
         "color":"#0ff"
     }
 }
 
-function pawn_moves(pos, state){
-    return "blah"
-}
-
-function make_state(type,owner){
+function make_state(type,owner,pos){
     return {
         "type":types[type],
-        "owner":owners[owner]
+        "owner":owners[owner],
+        "pos":pos
     }
 }
 
@@ -103,7 +377,7 @@ var Four_Chess = new Class({
         for(var col = 0; col < 8; col++){
             this.state[col] = []
             for(var row = 0; row < 8; row++){
-                this.state[col][row] = make_state("empty","none")
+                this.state[col][row] = make_state("empty","none",[col,row])
             }
         }
         this.create_piece("king","marn",[0,7])
@@ -139,52 +413,157 @@ var Four_Chess = new Class({
         this.create_piece("bishop","chad",[6,0])
         this.create_piece("bishop","malcolm",[7,6])
 
-        var board = Element('div',{
-            "id":"board"
-        }).inject($(main_div_id))
-        this.board_div = board
-        this.build_board(this.board_div)
+        //test pieces
+        if(false){
+            this.create_piece("bishop","chad",[3,4])
+            this.create_piece("king","chad",[2,4])
+            this.create_piece("pawn","malcolm",[2,3])
+            this.create_piece("rook","bruno",[4,5])
+            this.create_piece("pawn","bruno",[4,2])
+            this.create_piece("knight","marn",[3,5])
+            //this.create_piece("king",,[,])
+        }
+        this.player_order = [
+            owners["marn"],
+            owners["bruno"],
+            owners["chad"],
+            owners["malcolm"]
+        ]
+        this.current_player = this.player_order[0]
+        this.selected_piece = null
+        this.shown_moves = []
+        
+        this.build_board(main_div_id)
+        this.build_surround()
         this.draw_board(this.state,this.board_div)
     },
     draw_board: function(state,board_div){
         var square_px = this.square_px
         for(var col = 0; col < 8; col++){
             for(var row = 0; row < 8; row++){
+                var id_str = "p_" + col + "_" + row
                 if(state[col][row].owner.id == 0){
                     continue
                 }
+                console.log(state[col][row].type.img_pos)
                 Element('div',{
-                    "class":"piece",
-                    "text": state[col][row].type.letter,
-                    "events":{
-                        "click": function(e){
-                            //console.log(state)
-                            //console.log(col) 8!
-                            //console.log(row) 8!
-                            console.log([col,row])
-                            //state[col][row].type.moves(state,[col,row])
-                        }
-                    },
+                    "class":"piece " + state[col][row].owner.code,
+                    //"text": state[col][row].type.letter,
+                    "id":id_str,
                     "styles":{
-                        "top":row * square_px,
                         "left":col * square_px,
-                        "width":square_px,
-                        "height":square_px,
-                        "color":state[col][row].owner.color
+                        "top":row * square_px,
+                        "background-position":state[col][row].type.img_pos
                     }
                 }).inject(board_div)
             }
         }
+        var hilites = Element('div',{
+            "id":"hilites",
+        }).inject(board_div)
+        this.hilites = hilites
+    },
+    redraw_squares: function(o_col,o_row,d_col,d_row){
+        //move existing element
+        var o_id_str = "p_" + o_col + "_" + o_row
+        var d_id_str = "p_" + d_col + "_" + d_row
+        var taken_piece = $(d_id_str)
+        if(taken_piece){
+            taken_piece.destroy()
+        }
+        $(o_id_str).set({
+            "id":d_id_str,
+            "styles":{
+                "left":d_col * this.square_px,
+                "top":d_row * this.square_px
+            }
+        })
+    },
+    draw_moves: function(){
+        var moves = this.shown_moves
+        //console.log(moves)
+        this.hilites.getChildren().destroy()
+        Array.each(moves,function(move){
+            
+            Element('div',{
+                "id":"h_" + move[0]+ "_" + move[1],
+                "class":"hilite",
+                "styles":{
+                    "left":move[0] * this.square_px,
+                    "top":move[1] * this.square_px,
+                    "width":square_px,
+                    "height":square_px
+                }
+            }).inject(this.hilites)
+        })
     },
     create_piece: function(type,owner,pos){
-        this.state[pos[0]][pos[1]] = make_state(type,owner) 
+        this.state[pos[0]][pos[1]] = make_state(type,owner,pos) 
     },
-    build_board: function(board_div){
+    deselect_piece: function(){
+        this.shown_moves.empty()
+        this.draw_moves()
+        this.selected_piece = null
+    },
+    move_selected_piece: function(d_col,d_row){
+        var piece = this.selected_piece
+        var origin = piece.pos
+        var o_col = origin[0]
+        var o_row = origin[1]
+        var o_square = this.state[o_col][o_row]
+        var d_square = this.state[d_col][d_row]
+        
+        piece.pos = [d_col,d_row]
+        this.state[d_col][d_row] = o_square
+
+        this.state[o_col][o_row] = make_state("empty","none",[o_col,o_row])
+        
+        if(d_square.owner.id != 0){
+            //score the killing
+        }
+        this.deselect_piece()
+        this.current_player = this.player_order[(this.player_order.indexOf(this.current_player)+1)%4]
+        this.redraw_squares(o_col,o_row,d_col,d_row)
+        //console.log("moving")
+        //console.log(this.selected_piece)
+        //console.log("to ["+ col +", "+row+"]")
+        
+    },
+    build_surround: function(){
+        Element('div',{
+        }).inject($('main'))
+    },
+    build_board: function(main_div_id){
         square_px = this.square_px
-        board_div.setStyles({
-            "width":square_px*8,
-            "height":square_px*8
-        })
+        var board = Element('div',{
+            "id":"board",
+            "styles":{
+                "width":square_px*8,
+                "height":square_px*8,
+            },
+            "events":{
+                "click:relay(.piece)": function(e){
+                    var id_str = e.target.id.split("_")
+                    var col = id_str[1].toInt()
+                    var row = id_str[2].toInt()
+                    if(this.state[col][row].owner.id == this.current_player.id){
+                        this.selected_piece = this.state[col][row]
+                        this.shown_moves = this.state[col][row].type.moves(this.state,col,row)
+                    }else{
+                        this.deselect_piece()
+                    }
+                    this.draw_moves()
+                }.bind(this),
+                "click:relay(.hilite)": function(e){
+                    var id_str = e.target.id.split("_")
+                    var col = id_str[1].toInt()
+                    var row = id_str[2].toInt()
+                    this.move_selected_piece(col,row)
+                }.bind(this)
+            }
+        }).inject($(main_div_id))
+        this.board_div = board
+        
         for(var col = 0; col < 8; col++){
             for(var row = 0; row < 8; row++){
                 if((col+row)%2 == 0 ){
@@ -201,7 +580,7 @@ var Four_Chess = new Class({
                         "left":(col * square_px),
                         "background-color":bg_col
                     }
-                }).inject(board_div)
+                }).inject(board)
             }
         }
     }
