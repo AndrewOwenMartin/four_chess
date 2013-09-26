@@ -5,6 +5,7 @@ var Type = new Class({
         this.moves = options["moves"]
         this.id = options["id"]
         this.img_pos = options["img_pos"]
+        this.reward = options["reward"]
     }
 })
 function pawn_moves(state,col,row){
@@ -296,30 +297,35 @@ var types = {
         "letter":"p",
         "id":1,
         "img_pos":0,
+        "reward":1,
         "moves":pawn_moves
     }),
     "rook": new Type({
         "letter":"r",
         "id":2,
         "img_pos":-96,
+        "reward":2,
         "moves":long_moves
     }),
     "knight": new Type({
         "letter":"n",
         "id":3,
         "img_pos":-32,
+        "reward":2,
         "moves":knight_moves
     }),
     "bishop": new Type({
         "letter":"b",
         "id":4,
         "img_pos":-64,
+        "reward":2,
         "moves":long_moves
     }),
     "king": new Type({
         "letter":"k",
         "id":5,
         "img_pos":-160,
+        "reward":2,
         "moves":king_moves
     })
 }
@@ -339,24 +345,32 @@ var owners = {
         "id":1,
         "name":"Marn",
         "code":"marn",
+        "score":0,
+        "score_cell":null,
         "color":"#f00"
     },
     "bruno":{
         "id":2,
         "name":"Bruno",
         "code":"bruno",
+        "score":0,
+        "score_cell":null,
         "color":"#0f0"
     },
     "chad":{
         "id":3,
         "name":"Chad",
         "code":"chad",
+        "score":0,
+        "score_cell":null,
         "color":"#00f"
     },
     "malcolm":{
         "id":4,
         "name":"Malcolm",
         "code":"malcolm",
+        "score":0,
+        "score_cell":null,
         "color":"#0ff"
     }
 }
@@ -371,73 +385,15 @@ function make_state(type,owner,pos){
 
 
 var Four_Chess = new Class({
-    initialize: function(main_div_id){
+    initialize: function(main_div_id,score_div_id){
         this.square_px = 50
-        this.state = []
-        for(var col = 0; col < 8; col++){
-            this.state[col] = []
-            for(var row = 0; row < 8; row++){
-                this.state[col][row] = make_state("empty","none",[col,row])
-            }
-        }
-        this.create_piece("king","marn",[0,7])
-        this.create_piece("pawn","marn",[0,5])
-        this.create_piece("pawn","marn",[1,5])
-        this.create_piece("pawn","marn",[2,7])
-        this.create_piece("pawn","marn",[2,6])
-        this.create_piece("king","bruno",[0,0])
-        this.create_piece("pawn","bruno",[2,0])
-        this.create_piece("pawn","bruno",[2,1])
-        this.create_piece("pawn","bruno",[0,2])
-        this.create_piece("pawn","bruno",[1,2])
-        this.create_piece("king","chad",[7,0])
-        this.create_piece("pawn","chad",[5,0])
-        this.create_piece("pawn","chad",[5,1])
-        this.create_piece("pawn","chad",[7,2])
-        this.create_piece("pawn","chad",[6,2])
-        this.create_piece("king","malcolm",[7,7])
-        this.create_piece("pawn","malcolm",[5,7])
-        this.create_piece("pawn","malcolm",[5,6])
-        this.create_piece("pawn","malcolm",[7,5])
-        this.create_piece("pawn","malcolm",[6,5])
-        this.create_piece("knight","marn",[1,6])
-        this.create_piece("knight","bruno",[1,1])
-        this.create_piece("knight","chad",[6,1])
-        this.create_piece("knight","malcolm",[6,6])
-        this.create_piece("rook","marn",[0,6])
-        this.create_piece("rook","bruno",[1,0])
-        this.create_piece("rook","chad",[7,1])
-        this.create_piece("rook","malcolm",[6,7])
-        this.create_piece("bishop","marn",[1,7])
-        this.create_piece("bishop","bruno",[0,1])
-        this.create_piece("bishop","chad",[6,0])
-        this.create_piece("bishop","malcolm",[7,6])
-
-        //test pieces
-        if(false){
-            this.create_piece("bishop","chad",[3,4])
-            this.create_piece("king","chad",[2,4])
-            this.create_piece("pawn","malcolm",[2,3])
-            this.create_piece("rook","bruno",[4,5])
-            this.create_piece("pawn","bruno",[4,2])
-            this.create_piece("knight","marn",[3,5])
-            //this.create_piece("king",,[,])
-        }
-        this.player_order = [
-            owners["marn"],
-            owners["bruno"],
-            owners["chad"],
-            owners["malcolm"]
-        ]
-        this.current_player = this.player_order[0]
-        this.selected_piece = null
-        this.shown_moves = []
         
         this.build_board(main_div_id)
-        this.build_surround()
-        this.draw_board(this.state,this.board_div)
+        this.restart_game()
+        this.build_score(score_div_id)
     },
     draw_board: function(state,board_div){
+        board_div.getChildren().destroy()
         var square_px = this.square_px
         for(var col = 0; col < 8; col++){
             for(var row = 0; row < 8; row++){
@@ -458,6 +414,9 @@ var Four_Chess = new Class({
                 }).inject(board_div)
             }
         }
+        if(this.hilites){
+            this.hilites.destroy()
+        }
         var hilites = Element('div',{
             "id":"hilites",
         })
@@ -468,10 +427,6 @@ var Four_Chess = new Class({
         //move existing element
         var o_id_str = "p_" + o_col + "_" + o_row
         var d_id_str = "p_" + d_col + "_" + d_row
-        var taken_piece = $(d_id_str)
-        if(taken_piece){
-            taken_piece.destroy()
-        }
         $(o_id_str).set({
             "id":d_id_str,
             "styles":{
@@ -513,24 +468,162 @@ var Four_Chess = new Class({
         var d_square = this.state[d_col][d_row]
         
         piece.pos = [d_col,d_row]
-        this.state[d_col][d_row] = o_square
-
-        this.state[o_col][o_row] = make_state("empty","none",[o_col,o_row])
         
         if(d_square.owner.id != 0){
             //score the killing
+            var reward = this.kill_square(d_square,o_square.owner.id)
+            //console.log("giving " + reward + " points to " + piece.owner.name)
+            piece.owner.score += reward
+            piece.owner.score_cell.set('text',piece.owner.score)
         }
+        this.state[d_col][d_row] = o_square
+
+        this.state[o_col][o_row] = make_state("empty","none",[o_col,o_row])
+
         this.deselect_piece()
-        this.current_player = this.player_order[(this.player_order.indexOf(this.current_player)+1)%4]
+        var next_player_index = (this.player_order.indexOf(this.current_player)+1)%this.player_order.length
+        //console.log(next_player_index)
+        //console.log(this
+        $(this.current_player.code).addClass('notyourmove')
+        $(this.current_player.code).removeClass('yourmove')
+        this.current_player = this.player_order[next_player_index]
+        $(this.current_player.code).removeClass('notyourmove')
+        $(this.current_player.code).addClass('yourmove')
         this.redraw_squares(o_col,o_row,d_col,d_row)
         //console.log("moving")
         //console.log(this.selected_piece)
         //console.log("to ["+ col +", "+row+"]")
-        
+        if(this.player_order.length < 2){
+            this.restart_game()
+        }
+    },
+    restart_game : function(){
+        this.state = []
+        for(var col = 0; col < 8; col++){
+            this.state[col] = []
+            for(var row = 0; row < 8; row++){
+                this.state[col][row] = make_state("empty","none",[col,row])
+            }
+        }
+        this.create_piece("king","marn",[0,7])
+        this.create_piece("pawn","marn",[0,5])
+        this.create_piece("pawn","marn",[1,5])
+        this.create_piece("pawn","marn",[2,7])
+        this.create_piece("pawn","marn",[2,6])
+        this.create_piece("king","bruno",[0,0])
+        this.create_piece("pawn","bruno",[2,0])
+        this.create_piece("pawn","bruno",[2,1])
+        this.create_piece("pawn","bruno",[0,2])
+        this.create_piece("pawn","bruno",[1,2])
+        this.create_piece("king","chad",[7,0])
+        this.create_piece("pawn","chad",[5,0])
+        this.create_piece("pawn","chad",[5,1])
+        this.create_piece("pawn","chad",[7,2])
+        this.create_piece("pawn","chad",[6,2])
+        this.create_piece("king","malcolm",[7,7])
+        this.create_piece("pawn","malcolm",[5,7])
+        this.create_piece("pawn","malcolm",[5,6])
+        this.create_piece("pawn","malcolm",[7,5])
+        this.create_piece("pawn","malcolm",[6,5])
+        this.create_piece("knight","marn",[1,6])
+        this.create_piece("knight","bruno",[1,1])
+        this.create_piece("knight","chad",[6,1])
+        this.create_piece("knight","malcolm",[6,6])
+        this.create_piece("rook","marn",[0,6])
+        this.create_piece("rook","bruno",[1,0])
+        this.create_piece("rook","chad",[7,1])
+        this.create_piece("rook","malcolm",[6,7])
+        this.create_piece("bishop","marn",[1,7])
+        this.create_piece("bishop","bruno",[0,1])
+        this.create_piece("bishop","chad",[6,0])
+        this.create_piece("bishop","malcolm",[7,6])
+
+        //test pieces
+        if(true){
+            this.create_piece("bishop","chad",[3,4])
+            this.create_piece("king","chad",[2,4])
+            this.create_piece("pawn","malcolm",[2,3])
+            this.create_piece("rook","bruno",[4,5])
+            this.create_piece("pawn","bruno",[4,2])
+            this.create_piece("knight","marn",[3,5])
+            //this.create_piece("king",,[,])
+        }
+        this.player_order = [
+            owners["marn"],
+            owners["bruno"],
+            owners["chad"],
+            owners["malcolm"]
+        ]
+        this.current_player = this.player_order[0]
+        $$(".name").addClass('notyourmove')
+        $(this.current_player.code).removeClass('notyourmove')
+        $(this.current_player.code).addClass('yourmove')
+        this.selected_piece = null
+        this.shown_moves = []
+        this.draw_board(this.state,this.board_div)
+    },
+    kill_square: function(square,killer_id){
+        var reward = 0
+        var square_type = square.type
+        var square_owner = square.owner
+        square.type = types["empty"]
+        square.owner = owners["none"]
+        if(square_type.id > 0){
+            //console.log(square_type)
+            reward += square_type.reward
+            var d_id_str = "p_" + square.pos[0] + "_" + square.pos[1]
+            var taken_piece = $(d_id_str)
+            if(taken_piece){
+                taken_piece.destroy()
+            }
+            if(square_type.id == 5){
+                reward += this.kill_owner(square_owner)
+            }
+        }
+        //square make_state("empty","none",[o_col,o_row])
+        //console.log("returning "+reward)
+        return reward
+    },
+    kill_owner: function(owner){
+        var owner_index = this.player_order.indexOf(owner)
+        var owner_id = owner.id
+        if(owner_index > -1){
+            var dead_owner = this.player_order.splice(owner_index,1)
+            $(dead_owner[0].code).addClass('dead')
+        }
+        var kings_ransom = 0
+        var s = this.state
+        for(var col = 0; col < 8; col++){
+            for(var row = 0; row < 8; row++){
+                if(s[col][row].owner.id == owner_id){
+                    kings_ransom += this.kill_square(s[col][row])
+                }
+            }
+        }
+        return kings_ransom 
     },
     build_surround: function(){
         Element('div',{
         }).inject($('main'))
+    },
+    build_score: function(score_div_id){
+        var score = $(score_div_id)
+        this.score = score
+        var table = Element("table",{
+            "class":"score"
+        }).inject(score)
+        Array.each(this.player_order,function(item){
+            var row = Element('tr',{
+            }).inject(score)
+            Element('td',{
+                "text":item.name
+            }).inject(row)
+            var score_cell = Element('td',{
+                "id":"score_"+item.code,
+                "text":item.score
+            }).inject(row)
+            item.score_cell = score_cell
+        })
     },
     build_board: function(main_div_id){
         square_px = this.square_px

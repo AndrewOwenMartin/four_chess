@@ -20,7 +20,7 @@
     <script src="four_chess.js" type="text/javascript"></script>
     <style>
         
-        h1, html, body,div{
+        html, body,div{
             margin:0;
             padding:0;
             position: absolute;
@@ -71,12 +71,28 @@
             display:none;
         }
         .name{
-            position:absolute;
             padding:10px;
             background-color:black;
             border:10px outset;
             width:162px;
             text-align:center;
+            font-size:200%;
+            font-weight:bolder;
+        }
+        #score{
+            padding:10px;
+            background-color:black;
+            border:10px outset RoyalBlue;
+            width:200px;
+            left:575px;
+            top:200px;
+            color:RoyalBlue;
+            font-size:150%;
+            font-weight:bold;
+        }
+        #score td{
+            text-align:right;
+            padding-left:1em;
         }
         .green{
             top:650px;
@@ -100,14 +116,24 @@
             color:Gold;
             border-color:Gold;
         }
+        .notyourmove{
+            opacity:0.5;
+        }
+        .yourmove{
+            font-size:250%;
+        }
+        .dead{
+            text-decoration:line-through;
+        }
     </style>
 </head>
 <body>
-<h1 class="name green">King<br />Marn</h1>
-<h1 class="name white">King<br />Chad</h1>
-<h1 class="name red">King<br />Bruno</h1>
-<h1 class="name yellow">King<br />Malcolm</h1>
+<div id="marn" class="name green">King<br />Marn</div>
+<div id="chad" class="name white">King<br />Chad</div>
+<div id="bruno" class="name red">King<br />Bruno</div>
+<div id="malcolm" class="name yellow">King<br />Malcolm</div>
 <div id="main"></div>
+<div id="score" class="blue"></div>
 <div id="info">
     <ol>
     <li><b>P</b>awn</li>
@@ -118,8 +144,9 @@
     </ol>
 </div>
 <script>
+    var g;
     window.addEvent("domready", function(){
-        var g = new Four_Chess("main")
+        g = new Four_Chess("main","score")
     })
 </script>
 </body>
