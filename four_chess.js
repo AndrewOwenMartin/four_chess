@@ -445,7 +445,7 @@ var Four_Chess = new Class({
                 if(state[col][row].owner.id == 0){
                     continue
                 }
-                console.log(state[col][row].type.img_pos)
+                //console.log(state[col][row].type.img_pos)
                 Element('div',{
                     "class":"piece " + state[col][row].owner.code,
                     //"text": state[col][row].type.letter,
@@ -460,7 +460,8 @@ var Four_Chess = new Class({
         }
         var hilites = Element('div',{
             "id":"hilites",
-        }).inject(board_div)
+        })
+        hilites.inject(board_div)
         this.hilites = hilites
     },
     redraw_squares: function(o_col,o_row,d_col,d_row){
@@ -481,10 +482,8 @@ var Four_Chess = new Class({
     },
     draw_moves: function(){
         var moves = this.shown_moves
-        //console.log(moves)
         this.hilites.getChildren().destroy()
         Array.each(moves,function(move){
-            
             Element('div',{
                 "id":"h_" + move[0]+ "_" + move[1],
                 "class":"hilite",
@@ -495,7 +494,7 @@ var Four_Chess = new Class({
                     "height":square_px
                 }
             }).inject(this.hilites)
-        })
+        }.bind(this))
     },
     create_piece: function(type,owner,pos){
         this.state[pos[0]][pos[1]] = make_state(type,owner,pos) 
@@ -542,8 +541,8 @@ var Four_Chess = new Class({
                 "height":square_px*8,
             },
             "events":{
-                "click:relay(.piece)": function(e){
-                    var id_str = e.target.id.split("_")
+                "click:relay(.piece)": function(my_event){
+                    var id_str = my_event.target.id.split("_")
                     var col = id_str[1].toInt()
                     var row = id_str[2].toInt()
                     if(this.state[col][row].owner.id == this.current_player.id){
@@ -554,8 +553,8 @@ var Four_Chess = new Class({
                     }
                     this.draw_moves()
                 }.bind(this),
-                "click:relay(.hilite)": function(e){
-                    var id_str = e.target.id.split("_")
+                "click:relay(.hilite)": function(my_event_2){
+                    var id_str = my_event_2.target.id.split("_")
                     var col = id_str[1].toInt()
                     var row = id_str[2].toInt()
                     this.move_selected_piece(col,row)
