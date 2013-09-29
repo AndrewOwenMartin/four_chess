@@ -1,0 +1,9 @@
+Just clone into its own directory and open index.html in a JS enabled browser.
+
+To play, click (or tap) a piece, then click one of the highlighted squares.
+
+There's no persistance, network code, or checkmate detection (though you can't move your king into check).
+
+Any contributions welcome.
+
+I've used mootools and some non-free (watermarked) assets.
