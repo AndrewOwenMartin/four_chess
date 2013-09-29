@@ -174,7 +174,7 @@ var FourChess = new Class({
         this.create_piece("bishop","malcolm",[7,6])
 
         //test pieces
-        if(true){
+        if(false){
             this.create_piece("bishop","chad",[3,4])
             this.create_piece("king","chad",[2,4])
             this.create_piece("pawn","malcolm",[2,3])
