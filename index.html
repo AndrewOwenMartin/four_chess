@@ -1,152 +1,29 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-    <!--
     <meta charset='utf-8'>
-
-    <title></title>
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <link href="css/style.css" media="all" rel="stylesheet" type="text/css" />
-    <script src="js/script.js" type="text/javascript"></script>
-    <canvas id="my_canvas">Canvas not supported</canvas>
-    <script>
-    element = document.getElementById('my_canvas');
-    context = element.getContext('2d');
-    context.fillStyle = colors[brain_region].color;
-    context.fillRect(x*pix,y*pix,pix,pix);
-    </script>
-    -->
-    <script src="mootools.js" type="text/javascript"></script>
-    <script src="four_chess.js" type="text/javascript"></script>
-    <style>
-        
-        html, body,div{
-            margin:0;
-            padding:0;
-            position: absolute;
-            line-height:1;
-        }
-        body{
-        }
-        #main{
-            background-image:url("400_400_board.jpg");
-            top:125px;
-            left:50px;
-            width:500px;
-            height:500px;
-        }
-        #board{
-            left:50px;
-            top:50px;
-        }
-        .square{
-            display:none;
-        }
-        #hilites
-        .hilite{
-            background-color:teal;
-            opacity:0.6;
-        }
-        .piece{
-            height:32px;
-            width:32px;
-            background-repeat:no-repeat;
-            background-position-y: -10px;
-            margin:10px;
-        }
-        .malcolm{
-            background-image:url('yellow_pieces.png');
-        }
-        .bruno{
-            background-image:url('red_pieces.png');
-        }
-        .chad{
-            background-image:url('white_pieces.png');
-        }
-        .marn{
-            background-image:url('green_pieces.png');
-        }
-        #info{
-            left:500px;
-            display:none;
-        }
-        .name{
-            padding:10px;
-            background-color:black;
-            border:10px outset;
-            width:162px;
-            text-align:center;
-            font-size:200%;
-            font-weight:bolder;
-        }
-        #score{
-            padding:10px;
-            background-color:black;
-            border:10px outset RoyalBlue;
-            width:200px;
-            left:575px;
-            top:200px;
-            color:RoyalBlue;
-            font-size:150%;
-            font-weight:bold;
-        }
-        #score td{
-            text-align:right;
-            padding-left:1em;
-        }
-        .green{
-            top:650px;
-            left:25px;
-            color:ForestGreen;
-            border-color:ForestGreen;
-        }
-        .white{
-            left:411px;
-            color:White;
-            border-color:LightGray;
-        }
-        .red{
-            left:25px;
-            color:Crimson;
-            border-color:Crimson;
-        }
-        .yellow{
-            top:650px;
-            left:375px;
-            color:Gold;
-            border-color:Gold;
-        }
-        .notyourmove{
-            opacity:0.5;
-        }
-        .yourmove{
-            font-size:250%;
-        }
-        .dead{
-            text-decoration:line-through;
-        }
-    </style>
+    <title>Four Chess</title>
+    <link href="four_chess.css" media="all" rel="stylesheet" type="text/css" />
+    <script src="mootools-core-1.4.5-full-nocompat.js" type="text/javascript"></script>
+    <script src="globals.js" type="text/javascript"></script>
+    <script src="Player.js" type="text/javascript"></script>
+    <script src="Type.js" type="text/javascript"></script>
+    <script src="FourChess.js" type="text/javascript"></script>
 </head>
 <body>
-<div id="marn" class="name green">King<br />Marn</div>
-<div id="chad" class="name white">King<br />Chad</div>
-<div id="bruno" class="name red">King<br />Bruno</div>
-<div id="malcolm" class="name yellow">King<br />Malcolm</div>
-<div id="main"></div>
-<div id="score" class="blue"></div>
-<div id="info">
-    <ol>
-    <li><b>P</b>awn</li>
-    <li><b>R</b>ook</li>
-    <li>K<b>n</b>ight</li>
-    <li><b>B</b>ishop</li>
-    <li><b>K</b>ing</li>
-    </ol>
+<div id="main">
+    <!--
+    <div id="marn" class="name green">King<br />Marn</div>
+    <div id="chad" class="name white">King<br />Chad</div>
+    <div id="bruno" class="name red">King<br />Bruno</div>
+    <div id="malcolm" class="name yellow">King<br />Malcolm</div>
+    <div id="score" class="blue"></div>
+    -->
 </div>
 <script>
     var g;
     window.addEvent("domready", function(){
-        g = new Four_Chess("main","score")
+        g = new FourChess("main",[players.bruno,players.chad,players.marn,players.malcolm])
     })
 </script>
 </body>

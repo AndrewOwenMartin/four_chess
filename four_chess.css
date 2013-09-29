@@ -1,0 +1,95 @@
+html, body,div{
+    margin:0;
+    padding:0;
+    position: absolute;
+    line-height:1;
+}
+body{
+}
+#main{
+    width:500px;
+    height:500px;
+}
+#board_wrapper{
+    background-image:url("400_400_board.jpg");
+}
+#board{
+}
+.square{
+    display:none;
+}
+.hilite{
+    background-color:teal;
+    opacity:0.6;
+}
+.piece{
+    height:32px;
+    width:32px;
+    background-repeat:no-repeat;
+    background-position-y: -10px;
+    margin:10px;
+}
+.malcolm{
+    background-image:url('yellow_pieces.png');
+}
+.bruno{
+    background-image:url('red_pieces.png');
+}
+.chad{
+    background-image:url('white_pieces.png');
+}
+.marn{
+    background-image:url('green_pieces.png');
+}
+#info{
+    left:500px;
+    display:none;
+}
+.name{
+    padding:10px;
+    background-color:black;
+    border:10px outset;
+    text-align:center;
+    font-size:200%;
+    font-weight:bolder;
+}
+#score{
+    padding:10px;
+    background-color:black;
+    border:10px outset RoyalBlue;
+    width:200px;
+    left:600px;
+    top:200px;
+    color:RoyalBlue;
+    font-size:150%;
+    font-weight:bold;
+}
+#score td{
+    text-align:right;
+    padding-left:1em;
+}
+.green{
+    color:ForestGreen;
+    border-color:ForestGreen;
+}
+.white{
+    color:LightGray;
+    border-color:LightGray;
+}
+.red{
+    color:Crimson;
+    border-color:Crimson;
+}
+.yellow{
+    color:Gold;
+    border-color:Gold;
+}
+.notyourmove{
+    opacity:0.5;
+}
+.yourmove{
+    font-size:250%;
+}
+.dead{
+    text-decoration:line-through;
+}
