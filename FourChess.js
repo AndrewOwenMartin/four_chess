@@ -8,6 +8,69 @@ var FourChess = new Class({
         this.restart_game()
         this.init_score(this.score)
     },
+    build_board: function(main_div){
+        this.square_px = 50
+        this.board_size = [500,500]
+        this.board_edge = [50,50]
+        this.name_tag_size = [162,120]
+        var board_wrapper_div = Element('div',{
+            "id":"board_wrapper",
+            "styles":{
+                "width":this.square_px * 8 + this.board_edge[0] * 2,
+                "height":this.square_px * 8 + this.board_edge[1] * 2,
+                "left":this.name_tag_size[0]/2,
+                "top":this.name_tag_size[1]
+            }
+        }).inject(main_div)
+        var board_squares_div = Element('div',{
+            "id":"board",
+            "styles":{
+                "left":this.board_edge[0],
+                "top":this.board_edge[1]
+            },
+            "events":{
+                "click:relay(.piece)": function(my_event){
+                    var id_str = my_event.target.id.split("_")
+                    var col = id_str[1].toInt()
+                    var row = id_str[2].toInt()
+                    if(this.state[col][row].player.id == this.current_player.id){
+                        this.selected_piece = this.state[col][row]
+                        this.shown_moves = this.state[col][row].type.moves(this.state,col,row)
+                    }else{
+                        this.deselect_piece()
+                    }
+                    this.draw_moves()
+                }.bind(this),
+                "click:relay(.hilite)": function(my_event_2){
+                    var id_str = my_event_2.target.id.split("_")
+                    var col = id_str[1].toInt()
+                    var row = id_str[2].toInt()
+                    this.move_selected_piece(col,row)
+                }.bind(this)
+            }
+        }).inject(board_wrapper_div)
+        this.board_squares_div = board_squares_div
+
+        for(var col = 0; col < 8; col++){
+            for(var row = 0; row < 8; row++){
+                if((col+row)%2 == 0 ){
+                    var bg_col = "#fff"
+                }else{
+                    var bg_col = "#000"
+                }
+                Element('div',{
+                    "class":"square",
+                    "styles":{
+                        "width":this.square_px,
+                        "height":this.square_px,
+                        "top":(row * this.square_px),
+                        "left":(col * this.square_px),
+                        "background-color":bg_col
+                    }
+                }).inject(board)
+            }
+        }
+    }
     build_names: function(main_div,players){
         var names_div =  Element('div',{
             "id":"names"
@@ -26,6 +89,15 @@ var FourChess = new Class({
                 }
             }).inject(names_div)
         }.bind(this))
+    },
+    build_score: function(main_div){
+        var score = Element('div',{
+            "id":"score"
+        }).inject(main_div)
+        this.score = score
+        var table = Element("table",{
+            "class":"score"
+        }).inject(score)
     },
     draw_board: function(state,board_div){
         board_div.getChildren().destroy()
@@ -243,15 +315,6 @@ var FourChess = new Class({
         }
         return kings_ransom 
     },
-    build_score: function(main_div){
-        var score = Element('div',{
-            "id":"score"
-        }).inject(main_div)
-        this.score = score
-        var table = Element("table",{
-            "class":"score"
-        }).inject(score)
-    },
     init_score: function(score_div){
         console.log(this.player_order)
         Array.each(this.player_order,function(item){
@@ -266,68 +329,5 @@ var FourChess = new Class({
             }).inject(row)
             item.score_cell = score_cell
         })
-    },
-    build_board: function(main_div){
-        this.square_px = 50
-        this.board_size = [500,500]
-        this.board_edge = [50,50]
-        this.name_tag_size = [162,120]
-        var board_wrapper_div = Element('div',{
-            "id":"board_wrapper",
-            "styles":{
-                "width":this.square_px * 8 + this.board_edge[0] * 2,
-                "height":this.square_px * 8 + this.board_edge[1] * 2,
-                "left":this.name_tag_size[0]/2,
-                "top":this.name_tag_size[1]
-            }
-        }).inject(main_div)
-        var board_squares_div = Element('div',{
-            "id":"board",
-            "styles":{
-                "left":this.board_edge[0],
-                "top":this.board_edge[1]
-            },
-            "events":{
-                "click:relay(.piece)": function(my_event){
-                    var id_str = my_event.target.id.split("_")
-                    var col = id_str[1].toInt()
-                    var row = id_str[2].toInt()
-                    if(this.state[col][row].player.id == this.current_player.id){
-                        this.selected_piece = this.state[col][row]
-                        this.shown_moves = this.state[col][row].type.moves(this.state,col,row)
-                    }else{
-                        this.deselect_piece()
-                    }
-                    this.draw_moves()
-                }.bind(this),
-                "click:relay(.hilite)": function(my_event_2){
-                    var id_str = my_event_2.target.id.split("_")
-                    var col = id_str[1].toInt()
-                    var row = id_str[2].toInt()
-                    this.move_selected_piece(col,row)
-                }.bind(this)
-            }
-        }).inject(board_wrapper_div)
-        this.board_squares_div = board_squares_div
-        
-        for(var col = 0; col < 8; col++){
-            for(var row = 0; row < 8; row++){
-                if((col+row)%2 == 0 ){
-                    var bg_col = "#fff"
-                }else{
-                    var bg_col = "#000"
-                }
-                Element('div',{
-                    "class":"square",
-                    "styles":{
-                        "width":this.square_px,
-                        "height":this.square_px,
-                        "top":(row * this.square_px),
-                        "left":(col * this.square_px),
-                        "background-color":bg_col
-                    }
-                }).inject(board)
-            }
-        }
     }
 })
