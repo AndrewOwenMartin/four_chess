@@ -70,7 +70,7 @@ var FourChess = new Class({
                 }).inject(board)
             }
         }
-    }
+    },
     build_names: function(main_div,players){
         var names_div =  Element('div',{
             "id":"names"
